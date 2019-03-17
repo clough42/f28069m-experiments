@@ -77,7 +77,7 @@ void main(void)
     // Configure CPU-Timer 0 to interrupt every 500 milliseconds:
     // 80MHz CPU Freq, 50 millisecond Period (in uSeconds)
     //
-    ConfigCpuTimer(&CpuTimer0, 90, 0.5);
+    ConfigCpuTimer(&CpuTimer0, 90, 10);
 
     //
     // To ensure precise timing, use write-only instructions to write to the

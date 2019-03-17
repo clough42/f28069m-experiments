@@ -30,3 +30,11 @@
 *.exe
 *.out
 *.app
+/.metadata/
+
+
+# Other
+.jxbrowser-data
+.launches
+.config
+.xdchelp
