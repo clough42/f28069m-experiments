@@ -5,7 +5,7 @@
 
 void InitControlPanel();
 void SendControlPanelData(Uint16 data[], Uint16 ledMask);
-
+Uint16 ReadKeys(void);
 
 
 #endif // __SPI_CONTROLPANEL_H

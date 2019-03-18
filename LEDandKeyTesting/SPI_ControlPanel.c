@@ -15,7 +15,7 @@ void InitControlPanel(void)
     SpiaRegs.SPICCR.bit.CLKPOLARITY = 1;        // data latched on rising edge
     SpiaRegs.SPICTL.bit.CLK_PHASE=0;            // normal clocking scheme
     SpiaRegs.SPICTL.bit.MASTER_SLAVE=1;         // master
-    SpiaRegs.SPIBRR = 0;                        // baud rate = LSPCLK/4
+    SpiaRegs.SPIBRR = 32;                       // baud rate = LSPCLK/4
     SpiaRegs.SPIPRI.bit.TRIWIRE=1;              // 3-wire mode
     SpiaRegs.SPICCR.bit.SPISWRESET = 1;         // clear reset state; ready to transmit
 
@@ -108,6 +108,12 @@ void SendByte(Uint16 data) {
     dummy = SpiaRegs.SPIRXBUF;
 }
 
+Uint16 ReceiveByte(void) {
+    SpiaRegs.SPITXBUF = dummy;
+    while(SpiaRegs.SPISTS.bit.INT_FLAG !=1) {}
+    return SpiaRegs.SPIRXBUF;
+}
+
 void SendControlPanelData(Uint16 data[], Uint16 ledMask)
 {
     int i;
@@ -131,4 +137,31 @@ void SendControlPanelData(Uint16 data[], Uint16 ledMask)
     GpioDataRegs.GPASET.bit.GPIO19 = 1;
 
     SpiaRegs.SPICTL.bit.TALK = 0;
+}
+
+Uint16 ReadKeys(void)
+{
+    SpiaRegs.SPICTL.bit.TALK = 1;
+
+    GpioDataRegs.GPACLEAR.bit.GPIO19 = 1;
+    SendByte(reverse_byte(0x42));
+
+    SpiaRegs.SPICTL.bit.TALK = 0;
+
+    DELAY_US(1);
+
+    Uint16 byte1 = ReceiveByte();
+    Uint16 byte2 = ReceiveByte();
+    Uint16 byte3 = ReceiveByte();
+    Uint16 byte4 = ReceiveByte();
+
+    Uint16 keyMask =
+            (byte1 & 0x88) |
+            (byte2 & 0x88) >> 1 |
+            (byte3 & 0x88) >> 2 |
+            (byte4 & 0x88) >> 3;
+
+    GpioDataRegs.GPASET.bit.GPIO19 = 1;
+
+    return keyMask;
 }

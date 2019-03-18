@@ -141,11 +141,15 @@ void main(void)
         7
     };
 
+    Uint16 keys = 0xff;
+
     for(;;) {
         // just toggle the other bit as fast as possible
         GpioDataRegs.GPATOGGLE.bit.GPIO0 = 1;
 
-        SendControlPanelData(data, 0xff);
+        SendControlPanelData(data, keys);
+
+        keys = ReadKeys();
     };
 }
 
