@@ -113,18 +113,22 @@ void SendControlPanelData(Uint16 data[], Uint16 ledMask)
     int i;
     SpiaRegs.SPICTL.bit.TALK = 1;
 
-    GpioDataRegs.GPACLEAR.bit.GPIO19 = 1;       // lower the STB line
-    SendByte(reverse_byte(0x40));
-    GpioDataRegs.GPASET.bit.GPIO19 = 1;       // raise the STB line when done
+    GpioDataRegs.GPACLEAR.bit.GPIO19 = 1;
+    SendByte(reverse_byte(0x8a));           // brightness
+    GpioDataRegs.GPASET.bit.GPIO19 = 1;
 
-    GpioDataRegs.GPACLEAR.bit.GPIO19 = 1;       // lower the STB line
-    SendByte(reverse_byte(0xc0));
+    GpioDataRegs.GPACLEAR.bit.GPIO19 = 1;
+    SendByte(reverse_byte(0x40));           // auto-increment
+    GpioDataRegs.GPASET.bit.GPIO19 = 1;
+
+    GpioDataRegs.GPACLEAR.bit.GPIO19 = 1;
+    SendByte(reverse_byte(0xc0));           // display data
     for( i=0; i < 8; i++ ) {
         SendByte(lcd_char(data[i]));
         SendByte( (ledMask & 0x80) ? 0xff00 : 0x0000 );
         ledMask <<= 1;
     }
-    GpioDataRegs.GPASET.bit.GPIO19 = 1;       // raise the STB line when done
+    GpioDataRegs.GPASET.bit.GPIO19 = 1;
 
     SpiaRegs.SPICTL.bit.TALK = 0;
 }
