@@ -4,6 +4,7 @@
 // Included Files
 //
 #include "DSP28x_Project.h"     // Device Headerfile and Examples Include File
+#include "SPI_ControlPanel.h"
 
 //
 // Function Prototypes statements for functions found within this file.
@@ -92,6 +93,11 @@ void main(void)
     CpuTimer0Regs.TCR.all = 0x4001;
 
     //
+    // Set up SPI for control panel
+    //
+    InitControlPanel();
+
+    //
     // Step 5. User specific code, enable interrupts:
     //
 
@@ -124,9 +130,22 @@ void main(void)
     //
     // Step 6. IDLE loop. Just sit and loop forever (optional)
     //
+    Uint16 data[] = {
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+    };
+
     for(;;) {
         // just toggle the other bit as fast as possible
         GpioDataRegs.GPATOGGLE.bit.GPIO0 = 1;
+
+        SendControlPanelData(data, 0xff);
     };
 }
 
