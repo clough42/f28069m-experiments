@@ -102,13 +102,18 @@ void main(void)
     //
 
     //
-    // Configure GPIO34 as a GPIO output pin
+    // Configure GPIOS 6-10 as outputs
     //
     EALLOW;
-    GpioCtrlRegs.GPAMUX1.bit.GPIO0 = 0;
-    GpioCtrlRegs.GPADIR.bit.GPIO0 = 1;
-    GpioCtrlRegs.GPAMUX1.bit.GPIO1 = 0;
-    GpioCtrlRegs.GPADIR.bit.GPIO1 = 1;
+    GpioCtrlRegs.GPAMUX1.bit.GPIO6 = 0;
+    GpioCtrlRegs.GPAMUX1.bit.GPIO7 = 0;
+    GpioCtrlRegs.GPAMUX1.bit.GPIO8 = 0;
+    GpioCtrlRegs.GPADIR.bit.GPIO6 = 1;
+    GpioCtrlRegs.GPADIR.bit.GPIO7 = 1;
+    GpioCtrlRegs.GPADIR.bit.GPIO8 = 1;
+    GpioDataRegs.GPACLEAR.bit.GPIO6 = 1;
+    GpioDataRegs.GPACLEAR.bit.GPIO7 = 1;
+    GpioDataRegs.GPASET.bit.GPIO8 = 1;
     EDIS;
 
     //
@@ -145,7 +150,7 @@ void main(void)
 
     for(;;) {
         // just toggle the other bit as fast as possible
-        GpioDataRegs.GPATOGGLE.bit.GPIO0 = 1;
+        GpioDataRegs.GPATOGGLE.bit.GPIO6 = 1;
 
         SendControlPanelData(data, keys);
 
@@ -164,7 +169,8 @@ cpu_timer0_isr(void)
     //
     // Toggle GPIO34 once per 500 milliseconds
     //
-    GpioDataRegs.GPATOGGLE.bit.GPIO1 = 1;
+    GpioDataRegs.GPATOGGLE.bit.GPIO7 = 1;
+    GpioDataRegs.GPATOGGLE.bit.GPIO8 = 1;
 
     //
     // Acknowledge this interrupt to receive more interrupts from group 1

@@ -10,21 +10,21 @@ void InitControlPanel(void)
     EALLOW;
 
     // Set up SPI A
-    SpiaRegs.SPICCR.bit.SPISWRESET = 0;         // Enter RESET state
-    SpiaRegs.SPICCR.bit.SPICHAR = 0x7;          // 8 bits
-    SpiaRegs.SPICCR.bit.CLKPOLARITY = 1;        // data latched on rising edge
-    SpiaRegs.SPICTL.bit.CLK_PHASE=0;            // normal clocking scheme
-    SpiaRegs.SPICTL.bit.MASTER_SLAVE=1;         // master
-    SpiaRegs.SPIBRR = 32;                       // baud rate = LSPCLK/4
-    SpiaRegs.SPIPRI.bit.TRIWIRE=1;              // 3-wire mode
-    SpiaRegs.SPICCR.bit.SPISWRESET = 1;         // clear reset state; ready to transmit
+    SpibRegs.SPICCR.bit.SPISWRESET = 0;         // Enter RESET state
+    SpibRegs.SPICCR.bit.SPICHAR = 0x7;          // 8 bits
+    SpibRegs.SPICCR.bit.CLKPOLARITY = 1;        // data latched on rising edge
+    SpibRegs.SPICTL.bit.CLK_PHASE=0;            // normal clocking scheme
+    SpibRegs.SPICTL.bit.MASTER_SLAVE=1;         // master
+    SpibRegs.SPIBRR = 32;                       // baud rate = LSPCLK/4
+    SpibRegs.SPIPRI.bit.TRIWIRE=1;              // 3-wire mode
+    SpibRegs.SPICCR.bit.SPISWRESET = 1;         // clear reset state; ready to transmit
 
-    // Set up muxing for SPIA pins
-    GpioCtrlRegs.GPAMUX2.bit.GPIO16 = 1;        // select SPISIMOA
-    GpioCtrlRegs.GPAMUX2.bit.GPIO18 = 1;        // select SPICLKA
-    GpioCtrlRegs.GPAMUX2.bit.GPIO19 = 0;        // just use GPIO19 so we can control it ourselves
-    GpioCtrlRegs.GPADIR.bit.GPIO19 = 1;         // output
-    GpioDataRegs.GPASET.bit.GPIO19 = 1;         // set it to high
+    // Set up muxing for SPIB pins
+    GpioCtrlRegs.GPAMUX2.bit.GPIO24 = 3;        // select SPISIMOB
+    GpioCtrlRegs.GPAMUX2.bit.GPIO26 = 3;        // select SPICLKB
+    GpioCtrlRegs.GPAMUX2.bit.GPIO27 = 0;        // just use GPIO27 so we can control it ourselves
+    GpioCtrlRegs.GPADIR.bit.GPIO27 = 1;         // output
+    GpioDataRegs.GPASET.bit.GPIO27 = 1;         // set it to high
 
     EDIS;
 }
@@ -103,50 +103,50 @@ Uint16 lcd_char(Uint16 x)
 }
 
 void SendByte(Uint16 data) {
-    SpiaRegs.SPITXBUF = data;
-    while(SpiaRegs.SPISTS.bit.INT_FLAG !=1) {}
-    dummy = SpiaRegs.SPIRXBUF;
+    SpibRegs.SPITXBUF = data;
+    while(SpibRegs.SPISTS.bit.INT_FLAG !=1) {}
+    dummy = SpibRegs.SPIRXBUF;
 }
 
 Uint16 ReceiveByte(void) {
-    SpiaRegs.SPITXBUF = dummy;
-    while(SpiaRegs.SPISTS.bit.INT_FLAG !=1) {}
-    return SpiaRegs.SPIRXBUF;
+    SpibRegs.SPITXBUF = dummy;
+    while(SpibRegs.SPISTS.bit.INT_FLAG !=1) {}
+    return SpibRegs.SPIRXBUF;
 }
 
 void SendControlPanelData(Uint16 data[], Uint16 ledMask)
 {
     int i;
-    SpiaRegs.SPICTL.bit.TALK = 1;
+    SpibRegs.SPICTL.bit.TALK = 1;
 
-    GpioDataRegs.GPACLEAR.bit.GPIO19 = 1;
+    GpioDataRegs.GPACLEAR.bit.GPIO27 = 1;
     SendByte(reverse_byte(0x8a));           // brightness
-    GpioDataRegs.GPASET.bit.GPIO19 = 1;
+    GpioDataRegs.GPASET.bit.GPIO27 = 1;
 
-    GpioDataRegs.GPACLEAR.bit.GPIO19 = 1;
+    GpioDataRegs.GPACLEAR.bit.GPIO27 = 1;
     SendByte(reverse_byte(0x40));           // auto-increment
-    GpioDataRegs.GPASET.bit.GPIO19 = 1;
+    GpioDataRegs.GPASET.bit.GPIO27 = 1;
 
-    GpioDataRegs.GPACLEAR.bit.GPIO19 = 1;
+    GpioDataRegs.GPACLEAR.bit.GPIO27 = 1;
     SendByte(reverse_byte(0xc0));           // display data
     for( i=0; i < 8; i++ ) {
         SendByte(lcd_char(data[i]));
         SendByte( (ledMask & 0x80) ? 0xff00 : 0x0000 );
         ledMask <<= 1;
     }
-    GpioDataRegs.GPASET.bit.GPIO19 = 1;
+    GpioDataRegs.GPASET.bit.GPIO27 = 1;
 
-    SpiaRegs.SPICTL.bit.TALK = 0;
+    SpibRegs.SPICTL.bit.TALK = 0;
 }
 
 Uint16 ReadKeys(void)
 {
-    SpiaRegs.SPICTL.bit.TALK = 1;
+    SpibRegs.SPICTL.bit.TALK = 1;
 
-    GpioDataRegs.GPACLEAR.bit.GPIO19 = 1;
+    GpioDataRegs.GPACLEAR.bit.GPIO27 = 1;
     SendByte(reverse_byte(0x42));
 
-    SpiaRegs.SPICTL.bit.TALK = 0;
+    SpibRegs.SPICTL.bit.TALK = 0;
 
     DELAY_US(1);
 
@@ -161,7 +161,7 @@ Uint16 ReadKeys(void)
             (byte3 & 0x88) >> 2 |
             (byte4 & 0x88) >> 3;
 
-    GpioDataRegs.GPASET.bit.GPIO19 = 1;
+    GpioDataRegs.GPASET.bit.GPIO27 = 1;
 
     return keyMask;
 }
