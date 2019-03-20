@@ -5,6 +5,7 @@
 //
 #include "DSP28x_Project.h"     // Device Headerfile and Examples Include File
 #include "SPI_ControlPanel.h"
+#include "StepperDrive.h"
 
 //
 // Function Prototypes statements for functions found within this file.
@@ -78,7 +79,7 @@ void main(void)
     // Configure CPU-Timer 0 to interrupt every 500 milliseconds:
     // 80MHz CPU Freq, 50 millisecond Period (in uSeconds)
     //
-    ConfigCpuTimer(&CpuTimer0, 90, 10);
+    ConfigCpuTimer(&CpuTimer0, 90, STEPPER_CYCLE_US);
 
     //
     // To ensure precise timing, use write-only instructions to write to the
@@ -98,23 +99,13 @@ void main(void)
     InitControlPanel();
 
     //
-    // Step 5. User specific code, enable interrupts:
+    // Set up GPIO and state machine for stepper drive
     //
+    StepperDrive_Init();
 
     //
-    // Configure GPIOS 6-10 as outputs
+    // Step 5. User specific code, enable interrupts:
     //
-    EALLOW;
-    GpioCtrlRegs.GPAMUX1.bit.GPIO6 = 0;
-    GpioCtrlRegs.GPAMUX1.bit.GPIO7 = 0;
-    GpioCtrlRegs.GPAMUX1.bit.GPIO8 = 0;
-    GpioCtrlRegs.GPADIR.bit.GPIO6 = 1;
-    GpioCtrlRegs.GPADIR.bit.GPIO7 = 1;
-    GpioCtrlRegs.GPADIR.bit.GPIO8 = 1;
-    GpioDataRegs.GPACLEAR.bit.GPIO6 = 1;
-    GpioDataRegs.GPACLEAR.bit.GPIO7 = 1;
-    GpioDataRegs.GPASET.bit.GPIO8 = 1;
-    EDIS;
 
     //
     // Enable CPU INT1 which is connected to CPU-Timer 0
@@ -135,6 +126,7 @@ void main(void)
     //
     // Step 6. IDLE loop. Just sit and loop forever (optional)
     //
+
     Uint16 data[] = {
         0,
         1,
@@ -145,16 +137,41 @@ void main(void)
         6,
         7
     };
-
     Uint16 keys = 0xff;
 
     for(;;) {
-        // just toggle the other bit as fast as possible
-        GpioDataRegs.GPATOGGLE.bit.GPIO6 = 1;
-
         SendControlPanelData(data, keys);
 
         keys = ReadKeys();
+
+        //
+        // Respond to keypresses
+        //
+        if( keys & 0x01 ) {
+            StepperDrive_SetDesiredPosition(4);
+        }
+        if( keys & 0x02 ) {
+            StepperDrive_SetDesiredPosition(3);
+        }
+        if( keys & 0x04 ) {
+            StepperDrive_SetDesiredPosition(2);
+        }
+        if( keys & 0x08 ) {
+            StepperDrive_SetDesiredPosition(1);
+        }
+        if( keys & 0x10 ) {
+            StepperDrive_SetDesiredPosition(0);
+        }
+        if( keys & 0x20 ) {
+            StepperDrive_SetDesiredPosition(-1);
+        }
+        if( keys & 0x40 ) {
+            StepperDrive_SetDesiredPosition(-2);
+        }
+        if( keys & 0x80 ) {
+            StepperDrive_SetDesiredPosition(-3);
+        }
+
     };
 }
 
@@ -167,10 +184,9 @@ cpu_timer0_isr(void)
     CpuTimer0.InterruptCount++;
 
     //
-    // Toggle GPIO34 once per 500 milliseconds
+    // Service the stepper driver
     //
-    GpioDataRegs.GPATOGGLE.bit.GPIO7 = 1;
-    GpioDataRegs.GPATOGGLE.bit.GPIO8 = 1;
+    StepperDrive_Service_ISR();
 
     //
     // Acknowledge this interrupt to receive more interrupts from group 1
