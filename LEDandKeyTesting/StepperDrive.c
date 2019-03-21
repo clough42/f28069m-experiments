@@ -7,6 +7,7 @@ struct STEPPERDRIVE_STATE _stepperdrive_state;
 #define CURRENT _stepperdrive_state.currentPosition
 #define STEP_PIN GPIO6
 #define DIR_PIN GPIO7
+#define ISR_PIN GPIO9
 
 #define GPIO_SET(pin) GpioDataRegs.GPASET.bit.pin = 1
 #define GPIO_CLEAR(pin) GpioDataRegs.GPACLEAR.bit.pin = 1
@@ -31,9 +32,11 @@ void StepperDrive_Init(void)
     GpioCtrlRegs.GPAMUX1.bit.GPIO6 = 0;
     GpioCtrlRegs.GPAMUX1.bit.GPIO7 = 0;
     GpioCtrlRegs.GPAMUX1.bit.GPIO8 = 0;
+
     GpioCtrlRegs.GPADIR.bit.GPIO6 = 1;
     GpioCtrlRegs.GPADIR.bit.GPIO7 = 1;
     GpioCtrlRegs.GPADIR.bit.GPIO8 = 1;
+
     GpioDataRegs.GPACLEAR.bit.GPIO6 = 1; // step active-high
     GpioDataRegs.GPACLEAR.bit.GPIO7 = 1; // direction active high
     GpioDataRegs.GPACLEAR.bit.GPIO8 = 1; // enable active low
@@ -47,6 +50,7 @@ void StepperDrive_Init(void)
 
 void StepperDrive_Service_ISR(void)
 {
+
     switch( _stepperdrive_state.state ) {
 
     case 0:
@@ -87,6 +91,7 @@ void StepperDrive_Service_ISR(void)
         _stepperdrive_state.state = 1;
         break;
     }
+
 }
 
 

@@ -103,6 +103,13 @@ void main(void)
     //
     StepperDrive_Init();
 
+    // GPIO 9 as an indicator
+    EALLOW;
+    GpioCtrlRegs.GPAMUX1.bit.GPIO9 = 0;
+    GpioCtrlRegs.GPADIR.bit.GPIO9 = 1;
+    GpioDataRegs.GPACLEAR.bit.GPIO9 = 1;
+    EDIS;
+
     //
     // Step 5. User specific code, enable interrupts:
     //
@@ -175,6 +182,7 @@ void main(void)
     };
 }
 
+
 //
 // cpu_timer0_isr -
 //
@@ -183,10 +191,16 @@ cpu_timer0_isr(void)
 {
     CpuTimer0.InterruptCount++;
 
+    // flag entrance
+    GpioDataRegs.GPASET.bit.GPIO9 = 1;
+
     //
     // Service the stepper driver
     //
     StepperDrive_Service_ISR();
+
+    // flag exit
+    GpioDataRegs.GPACLEAR.bit.GPIO9 = 1;
 
     //
     // Acknowledge this interrupt to receive more interrupts from group 1
