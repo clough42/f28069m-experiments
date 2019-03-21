@@ -15,7 +15,7 @@ void InitControlPanel(void)
     SpibRegs.SPICCR.bit.CLKPOLARITY = 1;        // data latched on rising edge
     SpibRegs.SPICTL.bit.CLK_PHASE=0;            // normal clocking scheme
     SpibRegs.SPICTL.bit.MASTER_SLAVE=1;         // master
-    SpibRegs.SPIBRR = 32;                       // baud rate = LSPCLK/4
+    SpibRegs.SPIBRR = 90;                       // baud rate
     SpibRegs.SPIPRI.bit.TRIWIRE=1;              // 3-wire mode
     SpibRegs.SPICCR.bit.SPISWRESET = 1;         // clear reset state; ready to transmit
 

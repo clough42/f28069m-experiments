@@ -179,6 +179,8 @@ void main(void)
             StepperDrive_SetDesiredPosition(-3);
         }
 
+        DELAY_US(10000); // update at 100Hz-ish
+
     };
 }
 
@@ -191,7 +193,7 @@ cpu_timer0_isr(void)
 {
     CpuTimer0.InterruptCount++;
 
-    // flag entrance
+    // flag entrance to ISR for timing
     GpioDataRegs.GPASET.bit.GPIO9 = 1;
 
     //
@@ -199,7 +201,7 @@ cpu_timer0_isr(void)
     //
     StepperDrive_Service_ISR();
 
-    // flag exit
+    // flag exit from ISR for timing
     GpioDataRegs.GPACLEAR.bit.GPIO9 = 1;
 
     //
